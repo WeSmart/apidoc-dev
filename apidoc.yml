@@ -1,0 +1,2497 @@
+swagger: '2.0'
+info: {title: WeSmart, description: WeSmart Documentation, version: 2.1.0}
+host: api.wesmart.com
+schemes: [https]
+consumes: [application/json]
+produces: [application/json]
+tags:
+- {name: dashboard, description: Action on Project Dashboard}
+- {name: lynx, description: Action on Lynx}
+- {name: authorization, description: Action on Authorization}
+- {name: user, description: Action on User}
+- {name: project, description: Action on Project}
+- {name: application, description: Action on Project Application}
+- {name: collaborator, description: Action on Project Collaborator}
+- {name: notification, description: Action on Notifcation and Channel}
+- {name: device, description: Action on Project Device}
+- {name: stream, description: Action on Device Stream}
+- {name: report, description: Action on Project Report}
+- {name: weather, description: Action on Weather}
+- {name: prediction, description: Action on Prediction}
+- {name: alert, description: Action on Project Alert}
+securityDefinitions:
+  WeSmartAuth:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: https://api.wesmart.com/oauth/authorize
+    tokenUrl: https://api.wesmart.com/oauth/token
+    scopes: {project.dashboard.read: Read permission on Project Dashboard, project.dashboard.write: Write
+        permission on Project Dashboard, authorization.read: Read permission on Authorization,
+      authorization.write: Write permission on Authorization, notification.admin: Admin
+        permission on Notification, notification.read: Read permission on Notification,
+      notification.write: Write permission on Notification, profile.read: Read permission
+        on Profile, profile.write: Write permission on Profile, project.admin: Admin
+        permission on Project, project.create: Create permission on Project, project.read: Read
+        permission on Project, project.write: Write permission on Project, project.application.read: Read
+        permission on Project Application, project.application.write: Write permission
+        on Project Application, project.metadata.read: Read permission on metadata,
+      project.metadata.write: Write permission on metadata (here bills), project.device.read: Read
+        permission on Project Device, project.device.write: Write permission on Project
+        Device, project.report.read: Read permission on Project Report, project.report.write: Write
+        permission on Project Report, weather.read: Read permission on Weather, project.alert.read: Read
+        permission on Project Alert, project.alert.write: Write permission on Project
+        Alert}
+paths:
+  /project/{projectId}/dashboard:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [dashboard]
+      summary: List Project Dashboard
+      description: Get a list of Dashboard of the `Project`.
+      operationId: listDashboard
+      responses:
+        200:
+          description: List of Dashboard of the Project.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Dashboard'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.dashboard.read]
+    post:
+      tags: [dashboard]
+      summary: Create Project Dashboard
+      description: Create a new Dashboard
+      operationId: createDashboard
+      parameters:
+      - name: body
+        description: Dashboard object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/DashboardCreationRequest'}
+      responses:
+        201:
+          description: Dashboard created successfully
+          schema: {$ref: '#/definitions/Dashboard'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.dashboard.write]
+  /project/{projectId}/dashboard/{dashboardId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: dashboardId, in: path, description: Id of
+        the Dashboard, required: true}
+    get:
+      tags: [dashboard]
+      summary: Get Project Dashboard
+      description: Get Project Dashboard information
+      operationId: getDashboard
+      responses:
+        200:
+          description: The Project Dashboard information
+          schema: {$ref: '#/definitions/Dashboard'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.dashboard.read]
+    put:
+      tags: [dashboard]
+      summary: Update Project Dashboard
+      description: Update Project Dashboard information
+      operationId: updateDashboard
+      parameters:
+      - name: body
+        description: Dashboard object
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/DashboardUpdateRequest'}
+      responses:
+        204: {description: Dashboard updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.dashboard.write]
+    delete:
+      tags: [dashboard]
+      summary: Delete Project Dashboard
+      description: Delete a Project Dashboard.
+      operationId: deleteDashboard
+      responses:
+        204: {description: Dashboard deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.dashboard.write]
+  /{keyspace}/dump:
+    parameters:
+    - {type: string, name: keyspace, in: path, description: Name of the keyspace,
+      required: true}
+    get:
+      tags: [lynx]
+      summary: Dump data
+      description: Dump all data of the keyspace.
+      operationId: dumpData
+      produces: [text/csv]
+      responses:
+        200:
+          description: Data
+          schema: {type: file, example: keyspace;name;time;value "a8b1981c-2d7c-480f-bb22-34414ed61814";"baeb19fa-c5ea-4c06-9efa-7dd4045d8184";1490914800;39.0
+              "a8b1981c-2d7c-480f-bb22-34414ed61814";"baeb19fa-c5ea-4c06-9efa-7dd4045d8184";1490911200;23.0
+              "a8b1981c-2d7c-480f-bb22-34414ed61814";"baeb19fa-c5ea-4c06-9efa-7dd4045d8184";1490907600;24.0}
+  /{keyspace}/ingest:
+    parameters:
+    - {type: string, name: keyspace, in: path, description: Name of the keyspace,
+      required: true}
+    post:
+      tags: [lynx]
+      summary: Push data
+      description: Push new data on the keyspace or overwrite existing values.
+      operationId: pushData
+      parameters:
+      - name: body
+        description: Data to push
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/TS'}
+      responses:
+        204: {description: Data pushed successfully}
+        400: {$ref: '#/responses/BadRequest'}
+  /{keyspace}/query:
+    parameters:
+    - {type: string, name: keyspace, in: path, description: Name of the keyspace,
+      required: true}
+    post:
+      tags: [lynx]
+      summary: Query data
+      description: Query data on the keyspace.
+      operationId: queryData
+      parameters:
+      - name: body
+        description: Query
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/Query'}
+      responses:
+        200:
+          description: Data
+          schema:
+            type: object
+            description: Key-Value pair. Key is the timestamp in second as a string.
+              Value is the value of the stream at that time.
+            example: {1486656527: 21.8, 1486656537: 21.9, 1486656547: 21.7, 1486656557: 21.6}
+        400: {$ref: '#/responses/BadRequest'}
+    delete:
+      tags: [lynx]
+      summary: Delete data
+      description: Delete data on the keyspace.
+      operationId: deleteData
+      parameters:
+      - name: body
+        description: Query
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            names:
+              type: array
+              items: {type: string, format: UUID}
+              example: [01dbcde8-c625-4f1f-95c1-85603c24303a]
+            start: {type: number, format: int64, example: 1479250800}
+            end: {type: number, format: int64, example: 1489618800}
+      responses:
+        204: {description: Data deleted successfully}
+        400: {$ref: '#/responses/BadRequest'}
+  /authorization:
+    get:
+      tags: [authorization]
+      summary: List Authorizations
+      description: List the user Authorizations
+      operationId: listAuthorizations
+      responses:
+        200:
+          description: List of Authorization
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Authorization'}
+        404: {$ref: '#/responses/NotFound'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [authorization.read]
+  /authorization/{jti}:
+    parameters:
+    - {type: string, format: UUID, name: jti, in: path, description: Id of the Authorization,
+      required: true}
+    delete:
+      tags: [authorization]
+      summary: Delete Authorization
+      description: Delete an Authorization
+      operationId: deleteAuthorization
+      responses:
+        204: {description: Authorization deleted successfully}
+        404: {$ref: '#/responses/NotFound'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [authorization.write]
+  /project:
+    get:
+      tags: [project]
+      summary: List Project
+      description: Get the list of `Project` the user has access to.
+      operationId: listProjects
+      responses:
+        200:
+          description: List of Project
+          schema:
+            type: array
+            items: {$ref: '#/definitions/ExtendedProject'}
+      security:
+      - WeSmartAuth: [project.read]
+    post:
+      tags: [project]
+      summary: Create Project
+      description: Create a new `Project`
+      operationId: createProject
+      parameters:
+      - name: body
+        description: Project object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ProjectCreationRequest'}
+      responses:
+        201:
+          description: Project
+          schema: {$ref: '#/definitions/Project'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        400: {$ref: '#/responses/BadRequest'}
+      security:
+      - WeSmartAuth: [project.create]
+  /project/{projectId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [project]
+      summary: Get Project information
+      description: Get a `Project`
+      operationId: getProject
+      responses:
+        200:
+          description: The project information
+          schema: {$ref: '#/definitions/ExtendedProject'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.read]
+    put:
+      tags: [project]
+      summary: update Project information
+      description: Update a `Project`
+      operationId: UpdateProject
+      parameters:
+      - name: body
+        description: Project object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ProjectUpdateRequest'}
+      responses:
+        204: {description: Project updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.write]
+    delete:
+      tags: [project]
+      summary: Delete Project
+      description: Set a `Project` for deletion
+      operationId: deleteProject
+      responses:
+        204: {description: Project set for deletion successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.write]
+  /project/{projectId}/collaborator:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [collaborator]
+      summary: List Project collaborators
+      description: Get a list of collaborator of the `Project`.
+      operationId: listProjectCollaborators
+      responses:
+        200:
+          description: List of User of the Project.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Collaborator'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.read]
+  /project/{projectId}/collaborator/{userId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: userId, in: path, description: Id of the
+        User, required: true}
+    put:
+      tags: [collaborator]
+      summary: Add Project User
+      description: Add a new collaborator to the `Project` or edit the permissions
+        of an existing one.
+      operationId: addProjectCollaborator
+      parameters:
+      - name: body
+        in: body
+        description: Role of the user in the Project
+        required: true
+        schema: {$ref: '#/definitions/AddCollaboratorRequest'}
+      responses:
+        204: {description: Collaborator added to the Project successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.admin]
+    delete:
+      tags: [collaborator]
+      summary: Remove Project User
+      description: Remove a collaborator from the `Project`
+      operationId: deleteProjectCollaborator
+      responses:
+        204: {description: Collaborator removed from the Project successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.admin]
+  /user:
+    post:
+      tags: [user]
+      summary: Invite User
+      description: Invite a new `User`
+      operationId: inviteUser
+      parameters:
+      - name: body
+        description: User object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/UserInviteRequest'}
+      responses:
+        201:
+          description: User invited
+          schema: {$ref: '#/definitions/User'}
+        400: {$ref: '#/responses/BadRequest'}
+  /user/{userId}:
+    parameters:
+    - {type: string, format: UUID, name: userId, in: path, description: Id of the
+        User, required: true}
+    get:
+      tags: [user]
+      summary: Get User informations
+      description: Get informations of the `User`. You can only get your own information
+        (use the `/user/me` endpoint) unless you are an Admin of the application.
+      operationId: getUser
+      responses:
+        200:
+          description: User
+          schema: {$ref: '#/definitions/User'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [profile.read]
+    put:
+      tags: [user]
+      summary: Update User
+      description: Update the `User` information.
+      operationId: updateUser
+      parameters:
+      - name: body
+        in: body
+        required: true
+        description: The User to update
+        schema: {$ref: '#/definitions/UserUpdateRequest'}
+      responses:
+        204: {description: User updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [profile.write]
+    delete:
+      tags: [user]
+      summary: Delete User
+      description: Delete a `User`. Only admin can delete execute this call.
+      operationId: deleteUser
+      responses:
+        204: {description: User deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [profile.write]
+  /user/me:
+    get:
+      tags: [user]
+      summary: Get my informations
+      description: Get informations of the connected `User`.
+      operationId: getMe
+      responses:
+        200:
+          description: User
+          schema: {$ref: '#/definitions/User'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [profile.read]
+    put:
+      tags: [user]
+      summary: Update User
+      description: Update the connected `User` information.
+      operationId: updateMe
+      parameters:
+      - name: body
+        in: body
+        required: true
+        description: The User to update
+        schema: {$ref: '#/definitions/UserUpdateRequest'}
+      responses:
+        204: {description: User updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [profile.write]
+  /user/suggest:
+    post:
+      tags: [user]
+      summary: Suggest User
+      description: Make a request to find a `User` based on the query send.
+      operationId: suggestUser
+      parameters:
+      - name: body
+        description: User object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/UserSuggestRequest'}
+      responses:
+        200:
+          description: User suggestions
+          schema:
+            type: array
+            description: Array of Users
+            items: {$ref: '#/definitions/User'}
+  /project/{projectId}/application:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [application]
+      summary: List Project Application
+      description: Get a list of Application of the `Project`.
+      operationId: listApplication
+      responses:
+        200:
+          description: List of Application of the Project.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Application'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.application.read]
+    post:
+      tags: [application]
+      summary: Create Project Application
+      description: Create a new Application
+      operationId: createApplication
+      parameters:
+      - name: body
+        description: Application object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ApplicationCreationRequest'}
+      responses:
+        201:
+          description: Application created successfully
+          schema: {$ref: '#/definitions/Application'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.application.write]
+  /project/{projectId}/application/{applicationId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: applicationId, in: path, description: Id
+        of the Application, required: true}
+    get:
+      tags: [application]
+      summary: Get Project Application
+      description: Get Project Application information
+      operationId: getApplication
+      responses:
+        200:
+          description: The Project Application information
+          schema: {$ref: '#/definitions/Application'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.application.read]
+    put:
+      tags: [application]
+      summary: Update Project Application
+      description: Update Project Application information
+      operationId: updateApplication
+      parameters:
+      - name: body
+        description: Application object to update
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ApplicationUpdateRequest'}
+      responses:
+        204: {description: Application updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.application.write]
+    delete:
+      tags: [application]
+      summary: Delete Project Application
+      description: Delete a Project Application. Can only be used by project admin
+      operationId: deleteApplication
+      responses:
+        204: {description: Application deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.admin]
+  /notification:
+    get:
+      tags: [notification]
+      summary: List Notification
+      description: Get a list of Notification
+      operationId: listNotification
+      parameters:
+      - {name: limit, type: number, format: int32, in: query, description: limit the
+          number of notification receive. Used for pagination, required: false, default: 10}
+      - {name: offset, type: number, format: int32, in: query, description: offset
+          the number of notification receive. Used for pagination, required: false,
+        default: 0}
+      responses:
+        200:
+          description: Notifications list
+          headers:
+            UnreadCount: {type: number, description: Number of message unread}
+          schema:
+            type: array
+            description: List of Notification
+            items: {$ref: '#/definitions/Notification'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [notification.read]
+    post:
+      tags: [notification]
+      summary: Create Notification
+      description: Create a new Notification
+      operationId: createNotification
+      parameters:
+      - name: body
+        description: Notification object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/NotificationCreationRequest'}
+      responses:
+        200:
+          description: Created notification
+          schema: {$ref: '#/definitions/Notification'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [notification.write]
+    head:
+      tags: [notification]
+      summary: List Notification
+      description: Get a list of notification
+      operationId: patchNotification
+      responses:
+        200:
+          description: Notifications Count
+          headers:
+            UnreadCount: {type: number, description: Number of message unread}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [notification.read]
+  /notification/{notificationId}:
+    parameters:
+    - {name: notificationId, description: Notification Id, in: path, required: true,
+      type: string}
+    get:
+      tags: [notification]
+      summary: Get Notification
+      description: Get information of the Notification
+      operationId: getNotification
+      responses:
+        200:
+          description: Notifications list
+          headers:
+            UnreadCount: {type: number, description: Number of message unread}
+          schema: {$ref: '#/definitions/ExtendedNotification'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [notification.read]
+    put:
+      tags: [notification]
+      summary: Update Notification
+      description: Update a Notification
+      operationId: updateNotification
+      parameters:
+      - name: body
+        description: Notification object to update
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/NotificationUpdateRequest'}
+      responses:
+        204: {description: Notifications updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [notification.read]
+  /notification/channel:
+    get:
+      tags: [notification]
+      summary: List Notification Channel
+      description: Get a list of Channel
+      operationId: listChannel
+      responses:
+        200:
+          description: List of channel.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Channel'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [notification.admin]
+    post:
+      tags: [notification]
+      summary: Create Channel
+      description: Create a new Channel
+      operationId: createChannel
+      parameters:
+      - name: body
+        description: Channel object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ChannelCreationRequest'}
+      responses:
+        200:
+          description: Channel created successfully
+          schema: {$ref: '#/definitions/Channel'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [notification.admin]
+  /notification/channel/{channelId}:
+    parameters:
+    - {type: string, format: UUID, name: channelId, in: path, description: Id of the
+        Channel, required: true}
+    get:
+      tags: [notification]
+      summary: Get Channel information
+      description: Get the information of the Channel
+      operationId: getChannel
+      responses:
+        200:
+          description: Channel object
+          schema: {$ref: '#/definitions/Channel'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [notification.admin]
+    put:
+      tags: [notification]
+      summary: Update Channel
+      description: Update the information of the Channel.
+      operationId: updateChannel
+      parameters:
+      - name: body
+        description: Channel object to update
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ChannelUpdateRequest'}
+      responses:
+        204: {description: Channel updated successfully.}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [notification.admin]
+    delete:
+      tags: [application]
+      summary: List Project Application
+      description: Get a list of Application of the `Project`.
+      operationId: deleteChannel
+      responses:
+        204: {description: Channel deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [notification.admin]
+  /project/{projectId}/calendar/event/{eventId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    - {type: string, format: UUID, name: eventId, in: path, description: Id of the
+        event, required: true}
+    get:
+      tags: [calendar]
+      summary: Get an event
+      description: Get an event by its ID
+      operationId: getEvent
+      responses:
+        200:
+          description: Success
+          schema: {$ref: '#definitions/Event'}
+    delete:
+      tags: [calendar]
+      summary: Delete an Event
+      description: Delete a Event by its ID
+      operationId: deleteEvent
+      responses:
+        200: {description: Deletion successfull.}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+  /project/{projectId}/calendar/:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    post:
+      tags: [calendar]
+      summary: Import Events
+      description: Import a file containing a list of events.
+      operationId: importFileCalendar
+      consumes: [multipart/form-data]
+      parameters:
+      - {name: file, description: File to import, in: formData, required: true, type: file}
+      responses:
+        200: {description: file successfully imported.}
+        403: {$ref: '#/responses/PermissionDenied'}
+        500: {$ref: '#/responses/BadRequest'}
+  /project/{projectId}/calendar/event:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [calendar]
+      summary: Get all the events
+      description: Get all the events for the project.
+      operationId: getEvents
+      responses:
+        200:
+          description: Success
+          schema: {$ref: '#/definitions/Events'}
+        403: {$ref: '#/responses/PermissionDenied'}
+  /project/{projectId}/calendar/manual:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    post:
+      tags: [calendar]
+      summary: add events
+      description: add a list of events.
+      operationId: addEventsManual
+      parameters:
+      - name: body
+        description: List of events
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/importEventRequest'}
+      responses:
+        200: {description: file successfully imported.}
+        403: {$ref: '#/responses/PermissionDenied'}
+        500: {$ref: '#/responses/BadRequest'}
+      security:
+      - WeSmartAuth: [project.metadata.write]
+  /project/{projectId}/calendar/query:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    post:
+      tags: [calendar]
+      summary: query events
+      description: get list of events involved in a time interval
+      operationId: queryEvents
+      parameters:
+      - name: body
+        description: List of events
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/QueryEvents'}
+      responses:
+        200: {description: events successfully imported.}
+        403: {$ref: '#/responses/PermissionDenied'}
+        500: {$ref: '#/responses/BadRequest'}
+  /project/{projectId}/device:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [device]
+      summary: List Project Device
+      description: Get a list of Device of the `Project`.
+      operationId: listDevice
+      responses:
+        200:
+          description: List of Device of the Project.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Device'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.read]
+    post:
+      tags: [device]
+      summary: Create Project Device
+      description: Create a new Device
+      operationId: createDevice
+      parameters:
+      - name: body
+        description: Device object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/DeviceCreationRequest'}
+      responses:
+        201:
+          description: Device created successfully
+          schema: {$ref: '#/definitions/Device'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.write]
+  /project/{projectId}/device/{deviceId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: deviceId, in: path, description: Id of the
+        Device, required: true}
+    get:
+      tags: [device]
+      summary: Get Project Device
+      description: Get Project Device information
+      operationId: getDevice
+      responses:
+        200:
+          description: The Project Device information
+          schema: {$ref: '#/definitions/Device'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.device.read]
+    put:
+      tags: [device]
+      summary: Update Project Device
+      description: Update Project Device information
+      operationId: updateDevice
+      parameters:
+      - name: body
+        description: Device object to update
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/DeviceUpdateRequest'}
+      responses:
+        204: {description: Device updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.write]
+    delete:
+      tags: [device]
+      summary: Delete Project Device
+      description: Delete a Project Device
+      operationId: deleteDevice
+      responses:
+        204: {description: Device deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.device.write]
+  /project/{projectId}/device/{deviceId}/stream:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: deviceId, in: path, description: Id of the
+        Device, required: true}
+    get:
+      tags: [stream]
+      summary: List Project Device Stream
+      description: Get a list of Stream of the Device of the `Project`.
+      operationId: listStream
+      responses:
+        200:
+          description: List of Stream
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Stream'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.device.read]
+    post:
+      tags: [stream]
+      summary: Create Device Stream
+      description: Create a new Stream
+      operationId: createStream
+      parameters:
+      - name: body
+        description: Stream object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/StreamCreationRequest'}
+      responses:
+        201:
+          description: Device created successfully
+          schema: {$ref: '#/definitions/Device'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.write]
+  /project/{projectId}/device/{deviceId}/stream/{streamId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: deviceId, in: path, description: Id of the
+        Device, required: true}
+    - {type: string, format: UUID, name: streamId, in: path, description: Id of the
+        Stream, required: true}
+    get:
+      tags: [stream]
+      summary: Get Device Stream
+      description: Get Device Stream information
+      operationId: getStream
+      responses:
+        200:
+          description: The Device Stream information
+          schema: {$ref: '#/definitions/Stream'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.device.read]
+    put:
+      tags: [stream]
+      summary: Update Device Stream
+      description: Update Device Stream information
+      operationId: updateStream
+      parameters:
+      - name: body
+        description: Device object to update
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/StreamUpdateRequest'}
+      responses:
+        204: {description: Device updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.write]
+    delete:
+      tags: [stream]
+      summary: Delete Device Stream
+      description: Delete a Device Stream
+      operationId: deleteStream
+      responses:
+        204: {description: Device deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.device.write]
+  /unit:
+    get:
+      tags: [device]
+      summary: List Unit
+      description: List available Units
+      operationId: listUnit
+      responses:
+        200:
+          description: The List of unit
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Units'}
+  /project/{projectId}/device/dump:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [device]
+      summary: Dump Device data
+      description: Dump all data of all device in the project.
+      operationId: dumpDeviceData
+      produces: [text/csv]
+      responses:
+        200:
+          description: Data
+          schema: {type: file, example: 'device_id;device_name;stream_id;stream_name;time;date;value;type
+              "a8b1981c-2d7c-480f-bb22-34414ed61814";"First device";"baeb19fa-c5ea-4c06-9efa-7dd4045d8184";"HP";1490914800;"2017-03-30T23:00Z[UTC]";39.0;"energy"
+              "a8b1981c-2d7c-480f-bb22-34414ed61814";"First device";"baeb19fa-c5ea-4c06-9efa-7dd4045d8184";"HP";1490911200;"2017-03-30T22:00Z[UTC]";23.0;"energy"
+              "a8b1981c-2d7c-480f-bb22-34414ed61814";"First device";"baeb19fa-c5ea-4c06-9efa-7dd4045d8184";"HP";1490907600;"2017-03-30T21:00Z[UTC]";24.0;"energy"'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.read]
+  /project/{projectId}/device/ingest:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    post:
+      tags: [device]
+      summary: Push Device data
+      description: Push new data on the device or overwrite existing values.
+      operationId: pushDeviceData
+      parameters:
+      - name: body
+        description: Data to push
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/TS'}
+      responses:
+        204: {description: Data pushed successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.write]
+  /project/{projectId}/device/query:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    post:
+      tags: [device]
+      summary: Query Device data
+      description: Query data on the Project Device.
+      operationId: queryDeviceData
+      parameters:
+      - name: body
+        description: Management Query
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ManagementQuery'}
+      responses:
+        200:
+          description: Data
+          schema:
+            type: object
+            description: Key-Value pair. Key is the timestamp in second as a string.
+              Value is the value of the stream at that time.
+            example: {1486656527: 21.8, 1486656537: 21.9, 1486656547: 21.7, 1486656557: 21.6}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.write]
+  /project/{projectId}/bill/file/{fileId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: fileId, in: path, description: Id of the
+        file, required: true}
+    get:
+      tags: [bill]
+      description: get a file with its Id.
+      summary: get a file
+      responses:
+        200: {description: Success}
+        404: {description: file not found.}
+        403: {$ref: '#/responses/PermissionDenied'}
+    delete:
+      tags: [bill]
+      summary: Delete a file
+      description: Delete the file you want by its ID
+      operationId: deleteFile
+      responses:
+        204: {description: deletion terminated successfully}
+        403: {description: Permission denied}
+        404: {description: file not found}
+  /project/{projectId}/bill/file:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    post:
+      tags: [bill]
+      summary: import a bill
+      description: import a bill file of energy consumption and get its metadata.
+      operationId: postBill
+      consumes: [multipart/form-data]
+      parameters:
+      - {name: file, description: File to import, in: formData, required: true, type: file}
+      - {name: provider, description: The energy provider, in: query, required: false,
+        type: string}
+      responses:
+        200:
+          description: Request successfully terminated
+          schema: {$ref: '#/definitions/BillHeadersResponse'}
+        403: {$ref: '#/responses/PermissionDenied'}
+    get:
+      tags: [bill]
+      summary: Get files
+      description: get uploaded files for the project
+      responses:
+        200: {description: Success}
+        403: {$ref: '#/responses/PermissionDenied'}
+  /project/{projectId}/bill/{fileId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: fileId, in: path, description: Id of the
+        file you want to import, required: true}
+    post:
+      tags: [bill]
+      summary: Query chosen columns
+      description: Send the columns that you want to import and register it.
+      operationId: registerBill
+      parameters:
+      - name: columnChosen
+        in: body
+        required: true
+        description: The columns of the file you want to save
+        schema: {$ref: '#/definitions/ChosenColumnRequest'}
+      responses:
+        200:
+          description: Successfully imported
+          schema: {$ref: '#/definitions/BillDeviceResponse'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.metadata.write]
+  /data-provider:
+    get:
+      tags: [bill]
+      summary: Get list of providers
+      description: Get list of providers that you can handle file upload
+      operationId: getProvider
+      responses:
+        202:
+          description: list accepted.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Provider'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.metadata.write]
+  /project/{projectId}/report:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [report]
+      summary: List Project Report
+      description: Get a list of Report of the `Project`.
+      operationId: listReport
+      responses:
+        200:
+          description: List of Report of the Project.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Report'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.report.read]
+    post:
+      tags: [report]
+      summary: Create Project Report
+      description: Create a new Report
+      operationId: createReport
+      parameters:
+      - name: body
+        description: Report object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ReportCreationRequest'}
+      responses:
+        201:
+          description: Report created successfully
+          schema: {$ref: '#/definitions/Report'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.report.write]
+  /project/{projectId}/report/{reportId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: reportId, in: path, description: Id of the
+        Report, required: true}
+    get:
+      tags: [report]
+      summary: Get Project Report
+      description: Get Project Report information
+      operationId: getReport
+      responses:
+        200:
+          description: The Project Report information
+          schema: {$ref: '#/definitions/Report'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.report.read]
+    put:
+      tags: [report]
+      summary: Update Project Report
+      description: Update Project Report information
+      operationId: updateReport
+      parameters:
+      - name: body
+        description: Report object
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/ReportUpdateRequest'}
+      responses:
+        204: {description: Report updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.report.write]
+    delete:
+      tags: [report]
+      summary: Delete Project Report
+      description: Delete a Project Report.
+      operationId: deleteReport
+      responses:
+        204: {description: Report deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.report.write]
+  /weather:
+    post:
+      tags: [weather]
+      summary: Query Weather
+      description: Get Weather data for a location during a period
+      operationId: queryWeather
+      parameters:
+      - name: body
+        description: Query
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/Query'}
+      responses:
+        200:
+          description: The Weather data
+          schema:
+            type: object
+            description: Key-Value pair. Key is the timestamp in second as a string.
+              Value is the value of the stream at that time.
+            example: {1486656527: 21.8, 1486656537: 21.9, 1486656547: 21.7, 1486656557: 21.6}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [weather.read]
+  /weather/icon:
+    get:
+      tags: [weather]
+      summary: List Icon
+      description: Get Weather icon mapping
+      operationId: listIcon
+      responses:
+        200:
+          description: The Weather icon mapping
+          schema: {$ref: '#/definitions/Icon'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [weather.read]
+  /project/{projectId}/forecast/query:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    post:
+      tags: [prediction]
+      summary: Make forecast
+      description: Make a forecast to predict device data
+      operationId: forecast
+      parameters:
+      - name: body
+        description: PredictionQuery
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/PredictionQuery'}
+      responses:
+        200:
+          description: Data
+          schema:
+            type: object
+            description: Key-Value pair. Key is the timestamp in second as a string.
+              Value is the value of the stream at that time.
+            example: {1486656527: 21.8, 1486656537: 21.9, 1486656547: 21.7, 1486656557: 21.6}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.device.read, weather.read]
+  /project/{projectId}/alert:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        project, required: true}
+    get:
+      tags: [alert]
+      summary: List Project Alert
+      description: Get a list of Alert of the `Project`.
+      operationId: listAlert
+      responses:
+        200:
+          description: List of Alert of the Project.
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Alert'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.alert.read]
+    post:
+      tags: [alert]
+      summary: Create Project Alert
+      description: Create a new Alert
+      operationId: createAlert
+      parameters:
+      - name: body
+        description: Alert object to create
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/AlertCreationRequest'}
+      responses:
+        201:
+          description: Alert created successfully
+          schema: {$ref: '#/definitions/Alert'}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+      security:
+      - WeSmartAuth: [project.alert.write]
+  /project/{projectId}/alert/{alertId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: alertId, in: path, description: Id of the
+        Alert, required: true}
+    get:
+      tags: [alert]
+      summary: Get Project Alert
+      description: Get Project Alert information
+      operationId: getAlert
+      responses:
+        200:
+          description: The Project Alert information
+          schema: {$ref: '#/definitions/Alert'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.alert.read]
+    put:
+      tags: [alert]
+      summary: Update Project Alert
+      description: Update Project Alert information
+      operationId: updateAlert
+      parameters:
+      - name: body
+        description: Alert object to update
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/AlertUpdateRequest'}
+      responses:
+        204: {description: Alert updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.alert.write]
+    delete:
+      tags: [alert]
+      summary: Delete Project Alert
+      description: Delete a Project Alert
+      operationId: deleteAlert
+      responses:
+        204: {description: Alert deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.alert.write]
+  /project/{projectId}/alert/{alertId}/event:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: alertId, in: path, description: Id of the
+        Alert, required: true}
+    get:
+      tags: [alert]
+      summary: List Project Alert Event
+      description: Get a list of Event of the Alert of the `Project`.
+      operationId: listEvent
+      parameters:
+      - {name: from, in: query, description: List event from this time, required: false,
+        default: 0, type: number, format: int32}
+      - {name: to, in: query, description: List event to this thime, required: false,
+        default: 2147483647, type: number, format: int32}
+      responses:
+        200:
+          description: List of Event
+          schema:
+            type: array
+            items: {$ref: '#/definitions/Event'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.alert.read]
+  /project/{projectId}/alert/{alertId}/event/{eventId}:
+    parameters:
+    - {type: string, format: UUID, name: projectId, in: path, description: Id of the
+        Project, required: true}
+    - {type: string, format: UUID, name: alertId, in: path, description: Id of the
+        Alert, required: true}
+    - {type: string, format: UUID, name: eventId, in: path, description: Id of the
+        Event, required: true}
+    put:
+      tags: [alert]
+      summary: Update Alert Event
+      description: Update Alert Event information
+      operationId: updateEvent
+      parameters:
+      - name: body
+        description: Alert object to update
+        in: body
+        required: true
+        schema: {$ref: '#/definitions/EventUpdateRequest'}
+      responses:
+        204: {description: Alert updated successfully}
+        400: {$ref: '#/responses/BadRequest'}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.alert.write]
+    delete:
+      tags: [alert]
+      summary: Delete Alert Event
+      description: Delete a Alert Event
+      operationId: deleteEvent
+      responses:
+        204: {description: Alert Event deleted successfully}
+        403: {$ref: '#/responses/PermissionDenied'}
+        404: {$ref: '#/responses/NotFound'}
+      security:
+      - WeSmartAuth: [project.alert.write]
+responses:
+  NotFound:
+    description: Entity not found
+    schema: {$ref: '#/definitions/NotFoundError'}
+  PermissionDenied:
+    description: Permission denied
+    schema: {$ref: '#/definitions/PermissionDeniedError'}
+  BadRequest:
+    description: Bad request
+    schema: {$ref: '#/definitions/BadRequestError'}
+definitions:
+  Dashboard:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Dashboard, example: bb2e1e03-56dc-40c2-9063-9039508505b4}
+      name: {type: string, description: Name of the Dashboard., example: Dashboard
+          name}
+      description: {type: string, description: Description of the Dashboard., example: This
+          is the Dashboard description}
+      config: {type: object, description: Configuration of the Dashboard}
+  DashboardCreationRequest:
+    type: object
+    required: [name, description, config]
+    properties:
+      name: {type: string, description: Name of the Dashboard, example: Dashboard
+          Name}
+      description: {type: string, description: Description of the Dashboard, example: Dashboard
+          description}
+      config:
+        type: object
+        description: Configuration of the Dashboard
+        example:
+          widgets:
+          - {id: 92bba27f-daf5-4cf5-abac-322333797463, name: Global Consumption}
+  DashboardUpdateRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Project, example: Project name}
+      description: {type: string, description: Description of the Project, example: Project
+          description}
+      config: {type: object, description: Configuration of the Dashboard}
+  PermissionDeniedError:
+    type: object
+    properties:
+      status: {type: integer, format: int32, example: 403}
+      error: {type: string, example: Forbidden}
+      message: {type: string, example: Permission Denied}
+      timestamp: {type: number, example: 1488322800000}
+  NotFoundError:
+    type: object
+    properties:
+      status: {type: integer, format: int32, example: 404}
+      error: {type: string, example: Not Found}
+      message: {type: string, example: Entity not found}
+      timestamp: {type: number, example: 1488322800000}
+  BadRequestError:
+    type: object
+    properties:
+      status: {type: integer, format: int32, example: 400}
+      error: {type: string, example: Bad Request}
+      message: {type: string, example: Something is wrong with the request}
+      timestamp: {type: number, example: 1488322800000}
+  Query:
+    type: object
+    required: [names, start, end, aggregator, name, location]
+    properties:
+      names:
+        type: array
+        items: {type: string, format: UUID}
+        example: [01dbcde8-c625-4f1f-95c1-85603c24303a]
+      start: {type: number, format: int64, example: 1479250800}
+      end: {type: number, format: int64, example: 1489618800}
+      downsampling: {$ref: '#/definitions/Downsampling'}
+      aggregator: {$ref: '#/definitions/Aggregator'}
+      name:
+        type: string
+        enum: [temperature, humidity, precipitation, sunshine, icon]
+        example: temperature
+      location:
+        type: object
+        properties:
+          longitude: {type: number, example: 5.6153}
+          latitude: {type: number, example: 50.5543}
+  Aggregator:
+    type: string
+    required: [name]
+    properties:
+      name: {$ref: '#/definitions/Aggregators'}
+      interpolation: {type: boolean, default: false, example: false}
+    description: Aggregator to use
+    enum: [avg, sum, count, dev, max, min, last, most_common, none]
+    example: sum
+  Downsampling:
+    type: object
+    required: [aggregator, period, unit]
+    properties:
+      aggregator: {$ref: '#/definitions/Aggregators'}
+      period: {type: number, example: 1}
+      unit:
+        type: string
+        enum: [seconds, minutes, hours, days, weeks, months, years]
+        example: days
+  Aggregators:
+    type: string
+    enum: [avg, sum, count, dev, max, min, last, most_common, none]
+    example: sum
+  TS:
+    type: object
+    properties:
+      name: {type: string, format: UUID, description: Id of the stream, example: 01dbcde8-c625-4f1f-95c1-85603c24303a}
+      values:
+        type: object
+        description: Key-Value pair. Key is the timestamp in second as a string. Value
+          is the value of the stream at that time.
+        example: {1486656527: 21.8, 1486656537: 21.9, 1486656547: 21.7, 1486656557: 21.6}
+  Project:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the project., example: 30ce72a6-f681-4bfe-a284-6da9a5d36bad}
+      name: {type: string, description: Name of the Project., example: Project name}
+      description: {type: string, description: Description of the Project., example: This
+          is the Project description}
+      pendingDelete: {type: string, description: Whether if the Project is waiting
+          to be deleted or not., example: false}
+      position: {$ref: '#/definitions/Position'}
+  ExtendedProject:
+    allOf:
+    - {$ref: '#/definitions/Project'}
+    - type: object
+      properties:
+        permissions:
+          type: array
+          description: Permissions of the User in the Project
+          items:
+            type: string
+            enum: [authorization.read, authorization.write, notification.admin, notification.read,
+              notification.write, profile.read, profile.write, project.admin, project.create,
+              project.read, project.write, project.alert.read, project.alert.write,
+              project.application.read, project.application.write, project.dashboard.read,
+              project.dashboard.write, project.device.read, project.device.write]
+          example: [profile.read, project.read]
+  User:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the user, example: 956d64e5-b2c5-4178-8fbe-377a236b96e1}
+      email: {type: string, format: email, description: Email of the User, example: john@doe.com}
+      firstname: {type: string, description: Firstname of the User, example: John}
+      lastname: {type: string, description: Lastname of the User, example: Doe}
+      valid: {type: boolean, description: Is the User email confirmed, example: true}
+      rank:
+        type: string
+        description: Role of the user
+        enum: [STANDARD, ADMIN, MASTER]
+        example: STANDARD
+  Collaborator:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the user, example: 956d64e5-b2c5-4178-8fbe-377a236b96e1}
+      email: {type: string, format: email, description: Email of the User, example: john@doe.com}
+      firstname: {type: string, description: Firstname of the User, example: John}
+      lastname: {type: string, description: Lastname of the User, example: Doe}
+      role:
+        type: string
+        description: Role of the User in the Project
+        enum: [viewer, editor, owner]
+        example: owner
+  Position:
+    type: object
+    properties:
+      longitude: {type: number, description: Longitude of the `position`, example: 4.5}
+      latitude: {type: number, description: Latitude of the `position`, example: 50.5}
+      altitude: {type: number, description: Altitude of the `Position`, example: 5}
+  Authorization:
+    type: object
+    properties:
+      user: {type: string, format: UUID, description: Unique identifier representing
+          the User, example: f7b4e6bd-2b47-454c-a489-6a28bfc10bc1}
+      application: {type: string, format: UUID, description: Unique identifier representing
+          the Application, example: 8a02312d-6a39-4173-a4fd-2dd8e51b4247}
+      jti: {type: string, format: UUID, description: Unique identifier representing
+          the Authorization, example: 8f3f56b1-7478-47d4-8f24-5638db0c88cd}
+      scopes:
+        type: array
+        description: Scopes of the Authorization
+        items:
+          type: string
+          enum: [authorization.read, authorization.write, notification.admin, notification.read,
+            notification.write, profile.read, profile.write, project.admin, project.create,
+            project.read, project.write, project.alert.read, project.alert.write,
+            project.application.read, project.application.write, project.dashboard.read,
+            project.dashboard.write, project.device.read, project.device.write]
+        example: [profile.read, project.read]
+      issuedAt: {type: number, description: Timestamp issuance of the Authorization,
+        example: 1488875216}
+  Application:
+    type: object
+    properties:
+      id: {type: string, format: UUID, readOnly: true, description: Unique identifier
+          representing the Application, example: ef214843-570f-4284-848f-ed21d342d2c4}
+      project: {type: string, format: UUID, description: Unique identifier representing
+          the Project linked to this Application, example: f465dbac-bb03-43b3-b391-7dd69f9643ad}
+      name: {type: string, description: Name of the Application, example: Application
+          name}
+      secret: {type: string, description: Secret of the Application, example: 21018b08f4e74462a61b77a0b0e8d32021018b08f4e74462a61b77a0b0e8d320}
+      trusted: {type: boolean, description: Is the application trusted by WeSmart,
+        example: false}
+      autoApprove:
+        type: array
+        description: Array of the auto approved permissions for the Application. Only
+          for trusted application.
+        items:
+          type: string
+          enum: [authorization.read, authorization.write, notification.admin, notification.read,
+            notification.write, profile.read, profile.write, project.admin, project.create,
+            project.read, project.write, project.alert.read, project.alert.write,
+            project.application.read, project.application.write, project.dashboard.read,
+            project.dashboard.write, project.device.read, project.device.write]
+      creation: {type: number, description: Timestamp creation of the Application,
+        example: 1490705255}
+  Notification:
+    type: object
+    properties:
+      recipientId: {type: string, format: UUID, description: Recipient id, example: b20d69df-2b1c-41eb-9188-73675cb90c7f}
+      id: {type: string, format: UUID, description: Notification id, example: 8c58380e-446c-41fe-85d6-7f0252dd797c}
+      read: {type: boolean, description: Whether the notification has been read, example: false}
+      time: {type: number, format: int32, description: Creation time of the notification,
+        example: 1489489211}
+      meta:
+        type: object
+        description: MEtadata of the notification
+        example: {key: value}
+      type:
+        type: string
+        description: Type of the Notification
+        example: MESSAGE
+        enum: [MESSAGE, INFO, SYSTEM, ALERT]
+      senderId: {type: string, format: UUID, description: Sender id, example: 3b78943e-0ea6-4f23-a767-0d90a2417e2b}
+      subject: {type: string, description: Notification subject, example: notification
+          subject}
+      senderDisplay: {type: string, description: Sender display name, example: John
+          Doe}
+  ExtendedNotification:
+    allOf:
+    - {$ref: '#/definitions/Notification'}
+    - type: object
+      properties:
+        body: {type: string, description: Notification body, example: this is the
+            notification body. Usually bigger then the subject.}
+  Channel:
+    type: object
+    properties:
+      user: {type: string, format: UUID, description: Id of the User}
+      id: {type: string, format: UUID, description: Id of the Channel}
+      type:
+        type: string
+        description: Type of the Channel
+        enum: [SMS, EMAIL, WEBHOOK]
+      typeFilter:
+        type: array
+        description: List of notification type used by this Channel
+        items:
+          type: string
+          enum: [MESSAGE, INFO, SYSTEM, ALERT]
+      config: {$ref: '#/definitions/ChannelConfig'}
+  ProjectCreationRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Project, example: Project Name}
+      description: {type: string, description: Description of the Project, example: Project
+          description}
+      position: {$ref: '#/definitions/Position'}
+  ProjectUpdateRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Project, example: Project name}
+      description: {type: string, description: Description of the Project, example: Project
+          description}
+      position: {$ref: '#/definitions/Position'}
+  UserInviteRequest:
+    type: object
+    properties:
+      email: {type: string, description: Email of the User, example: john@doe.com}
+  UserSuggestRequest:
+    type: object
+    properties:
+      query: {type: string, description: Start of the User email, minLength: 3, example: john}
+  UserUpdateRequest:
+    type: object
+    properties:
+      email: {type: string, format: email, description: Email of the User, example: john@doe.com}
+      firstname: {type: string, description: Firstname of the User, example: John}
+      lastname: {type: string, description: Lastname of the User, example: Doe}
+      oldPassword: {type: string, format: password, description: Old password of the
+          User}
+      newPassword: {type: string, format: password, description: New Password of the
+          User}
+      useTotp: {type: boolean, description: Whether the User use two authentication
+          factor, example: true}
+      refreshTotp: {type: boolean, description: Whether the User totpSecret should
+          be refreshed, example: false}
+  ApplicationCreationRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Application, example: Application
+          name}
+  ApplicationUpdateRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Application, example: Application
+          name}
+      refreshSecret: {type: boolean, description: Whether the secret of the application
+          need to be refreshed or not, default: false, example: true}
+  AddCollaboratorRequest:
+    type: object
+    properties:
+      role:
+        type: string
+        description: Role of the User
+        enum: [viewer, editor, owner]
+        example: editor
+  NotificationCreationRequest:
+    type: object
+    properties:
+      recipientId: {type: string, format: UUID, description: Recipient id, example: 862ae10b-4941-42e3-a5ae-5a2099364816}
+      type:
+        type: string
+        description: Type of notification
+        example: MESSAGE
+        enum: [MESSAGE, INFO, SYSTEM, ALERT]
+      subject: {type: string, description: Notification subject, example: Notification
+          subject}
+      body: {type: string, description: Notification body, example: this is the notification
+          body. Usually bigger then the subject.}
+  NotificationUpdateRequest:
+    type: object
+    properties:
+      read: {type: boolean, description: Set the notification as read or unread, example: true}
+  ChannelCreationRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Channel, example: Channel Name}
+      type: {type: string, description: Type of the Channel, example: SMS}
+      typeFilter:
+        type: array
+        description: List of Notification type used by the Channel
+        items:
+          type: string
+          enum: [MESSAGE, INFO, SYSTEM, ALERT]
+      config: {$ref: '#/definitions/ChannelConfig'}
+  ChannelUpdateRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Channel, example: Channel Name}
+      type: {type: string, description: Type of the Channel, example: SMS}
+      typeFilter:
+        type: array
+        description: List of Notification type used by the Channel
+        items:
+          type: string
+          enum: [MESSAGE, INFO, SYSTEM, ALERT]
+      config: {$ref: '#/definitions/ChannelConfig'}
+  ChannelConfig: {type: object, description: 'Should be one of SmsConfig, EmailConfig
+      or WebhookConfig'}
+  SmsConfig:
+    description: Config for the SMS Channel
+    allOf:
+    - {$ref: '#/definitions/ChannelConfig'}
+    - type: object
+      properties:
+        to: {type: string, format: PhoneNumber, description: Phone number where to
+            send the notification}
+  EmailConfig:
+    description: Config for the EMAIL Channel
+    allOf:
+    - {$ref: '#/definitions/ChannelConfig'}
+    - type: object
+      properties:
+        email: {type: string, format: email, description: Email where to send the
+            notification}
+  WebhookConfig:
+    description: Config for the WEBHOOK Channel
+    allOf:
+    - {$ref: '#/definitions/ChannelConfig'}
+    - type: object
+      properties:
+        url: {type: string, format: url, description: Url where to send the notification}
+  Events:
+    type: array
+    description: List of Event
+    items: {$ref: '#/definitions/Event'}
+  Event:
+    type: object
+    properties:
+      id: {type: string, format: UUID, description: Unique identifier representing
+          the Event, example: 63754856-3b30-45a1-9181-7cbddedeac34, readOnly: true}
+      projectId: {type: string, format: UUID, description: Id of the event, example: 66e05760-7c4c-4caa-a5cf-465473ca2f8f}
+      summary: {type: string, description: summary of the Event, example: Week end}
+      description: {type: string, description: description of the Event, example: Week
+          end}
+      eventStart: {type: integer, description: UNIX timestamp (in seconds) representing
+          the start of the day, example: 1496737010}
+      eventEnd: {type: integer, description: UNIX timestamp (in seconds) representing
+          the end of the day, example: 1496756371}
+      isCompleteDay: {type: boolean, description: tells if the event last during complete
+          days or not}
+      meta:
+        type: object
+        properties:
+          type:
+            type: string
+            description: type of the event
+            example: [dayoff]
+        description: Meta of the Event
+      project: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Project., example: 1b4db2e9-5310-44f3-a7e2-fb520bb22dde}
+      alert: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Alert, example: 5fec1c6e-95d1-4eca-adcc-b58eb95e5e51}
+      state:
+        type: string
+        description: State of the Alert
+        enum: [OK, NO_DATA, ALERT]
+        example: OK
+      time: {type: number, description: Time of the Event, example: 1490137200}
+  importEventRequest:
+    type: object
+    properties:
+      summary: {type: string, description: summary of the Event, example: Week end}
+      description: {type: string, description: description of the Event, example: Week
+          end}
+      eventStart: {type: integer, description: UNIX timestamp (in seconds) representing
+          the start of the day, example: 1496737010}
+      eventEnd: {type: integer, description: UNIX timestamp (in seconds) representing
+          the end of the day, example: 1496756371}
+      isCompleteDay: {type: boolean, description: tells if the event last during complete
+          days or not}
+      meta:
+        type: object
+        properties:
+          type:
+            type: string
+            description: type of the event
+            example: [dayoff]
+  QueryEvents:
+    type: object
+    properties:
+      evStart: {type: integer, description: Timestamp representing the start of the
+          interval you want to query, example: 1451606400}
+      evEnd: {type: integer, description: Timestamp representing the end of the interval
+          you want to query, example: 1483228800}
+  Device:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Device., example: db43b3eb-825e-4778-949e-ece93747a239}
+      project: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Project, example: 3f9132f6-49f0-4a1c-8286-ed8ba3321ccc}
+      name: {type: string, description: Name of the Device., example: Device name}
+      description: {type: string, description: Description of the Device., example: This
+          is the Device description}
+      pendingDelete: {type: string, description: Whether if the Project is waiting
+          to be deleted or not., example: false}
+      position: {$ref: '#/definitions/Position'}
+      streams:
+        type: array
+        description: List of streams
+        items: {$ref: '#/definitions/Stream'}
+  BillHeadersResponse:
+    type: object
+    properties:
+      idFile: {type: string, format: UUID, example: ae245aff-0bfd-433c-a80d-40bf734effeb}
+      fileName: {type: string, example: EngieReport.xlsx}
+      uploadDate: {type: integer, example: 1497092232}
+      provider: {type: string, example: engie}
+      headers:
+        type: array
+        items: {$ref: '#/definitions/FileColumnSimplified'}
+  BillDeviceResponse:
+    type: object
+    properties:
+      projectId: {type: string, format: UUID, example: ae245aff-0bfd-433c-a80d-40bf734effeb}
+      userId: {type: string, format: UUID, example: 6ef1ae5e-4869-40a5-82fb-fc9ea44ed42f}
+      fileName: {type: string, example: Engiebill.xlsx}
+      uploadDate: {type: integer, example: 1497092232}
+      metadata:
+        type: array
+        items: {$ref: '#/definitions/Metadata'}
+  Metadata:
+    type: object
+    properties:
+      type: {type: string, example: bill}
+      deviceId: {type: string, format: UUID, example: 6fde8f38-0f70-44f3-b18d-0cea2695172d}
+      provider: {type: string, example: engie}
+      headers:
+        type: array
+        items: {$ref: '#/definitions/FileColumnSimplified'}
+  FileColumnSimplified:
+    type: object
+    properties:
+      id: {type: string, format: slug, example: my-column-name}
+      columnName: {type: string, example: My Column Name}
+  FileColumn:
+    type: object
+    properties:
+      columnId: {type: string, format: slug, example: my-column-name}
+      streamName: {type: string, example: My Column Name}
+      streamType: {type: string, example: energy}
+      streamIncrement: {type: boolean, example: true}
+  Provider:
+    type: object
+    properties:
+      name: {type: string, description: name of the company, example: ENGIE ELECTRABEL}
+      alias: {type: string, description: alias of provider for the query, example: engie}
+      extensions:
+        type: array
+        items:
+          type: string
+          example: [xlsx, xls]
+  Stream:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Stream., example: 743f4d4c-32b2-41c8-aa81-6b312111d1e8}
+      deviceId: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Device, example: db43b3eb-825e-4778-949e-ece93747a239}
+      name: {type: string, description: Name of the Stream, example: Stream name}
+      type: {type: string, description: Type of the Stream. Must be one of the Unit
+          name., example: Energy}
+      increment: {type: boolean, description: Define the Stream as incremental., example: false}
+  Units:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Unit, example: Energy}
+      symbol: {type: string, description: Symbol of the Unit, example: kWh}
+      others:
+        type: array
+        description: Array of alternative Unit
+        items:
+          type: object
+          properties:
+            factor: {type: number, description: Factor of the alternative Unit, example: 1000}
+            symbol: {type: string, description: Symbol of the alternative Unit, example: MWh}
+  DeviceCreationRequest:
+    type: object
+    required: [name, description, position]
+    properties:
+      name: {type: string, description: Name of the Device, example: Project name}
+      description: {type: string, description: Description of the Device, example: Project
+          description}
+      position: {$ref: '#/definitions/Position'}
+      tags:
+        type: object
+        description: Tags of the Device
+        example: {floor: 1}
+  DeviceUpdateRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Device, example: Project name}
+      description: {type: string, description: Description of the Device, example: Project
+          description}
+      position: {$ref: '#/definitions/Position'}
+      tags:
+        type: object
+        description: Tags of the Device
+        example: {floor: 1}
+  StreamCreationRequest:
+    type: object
+    required: [name, type]
+    properties:
+      name: {type: string, description: Name of the Stream, example: Stream Name}
+      type: {type: string, description: Type of the Stream. Must be one of the Unit
+          name., example: Energy}
+      increment: {type: boolean, description: Define the Stream as incremental, default: false,
+        example: false}
+  ChosenColumnRequest:
+    type: object
+    properties:
+      deviceName: {type: string, example: myBill}
+      deviceDescription: {type: string, example: This bill contains the energy consumption
+          summary of the building.}
+      Columnchosen:
+        type: array
+        items: {$ref: '#/definitions/FileColumn'}
+  StreamUpdateRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Stream, example: Stream Name}
+      type: {type: string, description: Type of the Stream. Must be one of the Unit
+          name., example: Energy}
+      increment: {type: boolean, description: Define the Stream as incremental, example: false}
+  ManagementQuery:
+    type: object
+    required: [names, start, end, aggregator]
+    properties:
+      names:
+        type: array
+        items: {type: string, format: UUID}
+        example: [01dbcde8-c625-4f1f-95c1-85603c24303a]
+      start: {type: number, format: int64, example: 1479250800}
+      end: {type: number, format: int64, example: 1489618800}
+      downsampling: {$ref: '#/definitions/Downsampling'}
+      aggregator: {$ref: '#/definitions/Aggregator'}
+  Report:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Report, example: bb2e1e03-56dc-40c2-9063-9039508505b4}
+      name: {type: string, description: Name of the Report., example: Report name}
+      description: {type: string, description: Description of the Report., example: This
+          is the Report description}
+      config: {type: object, description: Configuration of the Report}
+  ReportCreationRequest:
+    type: object
+    required: [name, description, config]
+    properties:
+      name: {type: string, description: Name of the Report, example: Report Name}
+      description: {type: string, description: Description of the Report, example: Report
+          description}
+      config:
+        type: object
+        description: Configuration of the Report
+        example:
+          widgets:
+          - {id: 92bba27f-daf5-4cf5-abac-322333797463, name: Global Consumption}
+  ReportUpdateRequest:
+    type: object
+    properties:
+      name: {type: string, description: Name of the Project, example: Project name}
+      description: {type: string, description: Description of the Project, example: Project
+          description}
+      config: {type: object, description: Configuration of the Report}
+  Icon:
+    type: object
+    description: Object mapping the icon number to an icon.
+    example: {1: CLEAR_DAY, 2: RAIN, 3: SNOW, 4: SLEET, 5: WIND, 6: FOG, 7: CLOUDY,
+      8: PARTLY_CLOUDY_DAY}
+  Location:
+    type: object
+    properties:
+      longitude: {type: number, description: Longitude of the `position`, example: 4.5}
+      latitude: {type: number, description: Latitude of the `position`, example: 50.5}
+  PredictionQuery:
+    type: object
+    required: [names, start, end, aggregator]
+    properties:
+      names:
+        type: array
+        description: Stream ids on which the forecast must be done
+        items: {type: string, format: UUID, description: Stream id}
+        example: [01dbcde8-c625-4f1f-95c1-85603c24303a]
+      start: {type: number, format: int64, example: 1479250800}
+      end: {type: number, format: int64, example: 1489618800}
+      downsampling: {$ref: '#/definitions/Downsampling'}
+      aggregator: {$ref: '#/definitions/Aggregator'}
+      meta:
+        type: object
+        properties:
+          weather: {$ref: '#/definitions/Weather'}
+      config: {$ref: '#/definitions/Config'}
+  Weather:
+    type: object
+    required: [location, names]
+    properties:
+      location: {$ref: '#/definitions/Location'}
+      names:
+        type: array
+        description: List of weather to use
+        items:
+          type: string
+          description: Weather name
+          enum: [temperature, humidity, precipitation, sunshine]
+  Config:
+    type: object
+    properties:
+      algorithm:
+        type: string
+        description: Type of algorithm to use
+        default: LinearRegression
+        enum: [GaussianProcesses, LinearRegression, SMOreg, MultilayerPerceptron]
+        example: GaussianProcesses
+      algoConfig: {$ref: '#/definitions/AlgoConfig'}
+      lag:
+        description: Configuration of lags.
+        type: object
+        required: [min, max]
+        properties:
+          min: {type: number, description: Minimum lag to use}
+          max: {type: number, description: Maximum lag to use}
+          ranger: {type: string, description: Lag range for fine tune selection}
+  AlgoConfig: {type: object, description: Use the algorithm configuration corresponding
+      to the algorithm you have choose}
+  GaussianProcesses:
+    allOf:
+    - {$ref: '#/definitions/AlgoConfig'}
+    - type: object
+      description: 'Implements Gaussian processes for regression without hyperparameter-tuning.
+        To make choosing an appropriate noise level easier, this implementation applies
+        normalization/standardization to the target attribute as well as the other
+        attributes (if  normalization/standardizaton is turned on). Missing values
+        are replaced by the global mean/mode. Nominal attributes are converted to
+        binary ones. Note that kernel caching is turned off if the kernel used implements
+        CachedKernel. For more information see: David J.C. Mackay: Introduction to
+        Gaussian Processes (1998). http://wol.ra.phy.cam.ac.uk/mackay/gpB.ps.gz'
+      properties:
+        filterType:
+          type: string
+          description: Determines how/if the data will be transformed.
+          enum: [NONE, NORMALIZE, STANDARDIZE]
+          default: NORMALIZE
+        noise: {type: number, format: double, description: 'The level of Gaussian
+            Noise (added to the diagonal of the Covariance Matrix), after the target
+            has been normalized/standardized/left unchanged).', default: 1.0}
+        kernel:
+          type: string
+          description: The kernel to use
+          enum: [NormalizedPolyKernel, PolyKernel]
+          default: PolyKernel
+        kernelConfig: {$ref: '#/definitions/KernelConfig'}
+  LinearRegression:
+    allOf:
+    - {$ref: '#/definitions/AlgoConfig'}
+    - type: object
+      description: Class for using linear regression for prediction. Uses the Akaike
+        criterion for model selection, and is able to deal with weighted instances.
+      properties:
+        attributeSelectionMethod:
+          type: string
+          description: 'Set the method used to select attributes for use in the linear
+            regression. Available methods are: no attribute selection, attribute selection
+            using M5''s method (step through the attributes removing the one with
+            the smallest standardised coefficient until no improvement is observed
+            in the estimate of the error given by the Akaike information criterion),
+            and a greedy selection using the Akaike information metric.'
+          enum: [NONE, M5, GREEDY]
+          default: M5
+        eliminateColinearAttributes: {type: boolean, description: Eliminate colinear
+            attributes, default: true}
+        ridge: {type: number, format: double, description: The value of the Ridge
+            parameter, default: 1.0E-8}
+  MultilayerPerceptron:
+    allOf:
+    - {$ref: '#/definitions/AlgoConfig'}
+    - type: object
+      description: A Classifier that uses backpropagation to classify instances. This
+        network can be built by hand, created by an algorithm or both. The network
+        can also be monitored and modified during training time. The nodes in this
+        network are all sigmoid (except for when the class is numeric in which case
+        the the output nodes become unthresholded linear units).
+      properties:
+        autoBuild: {type: boolean, description: Adds and connects up hidden layers
+            in the network., default: true}
+        decay: {type: boolean, description: 'This will cause the learning rate to
+            decrease. This will divide the starting learning rate by the epoch number,
+            to determine what the current learning rate should be. This may help to
+            stop the network from diverging from the target output, as well as improve
+            general performance. Note that the decaying learning rate will not be
+            shown in the gui, only the original learning rate. If the learning rate
+            is changed in the gui, this is treated as the starting learning rate.',
+          default: false}
+        hiddenLayers: {type: string, description: 'This defines the hidden layers
+            of the neural network. This is a list of positive whole numbers. 1 for
+            each hidden layer. Comma seperated. To have no hidden layers put a single
+            0 here. This will only be used if autobuild is set. There are also wildcard
+            values ''a'' = (attribs + classes) / 2, ''i'' = attribs, ''o'' = classes
+            , ''t'' = attribs + classes.', default: a}
+        learningRate: {type: number, format: double, description: The amount the weights
+            are updated., default: 0.3}
+        momentum: {type: number, format: double, description: Momentum applied to
+            the weights during updating., default: 0.2}
+        nominalToBinaryFilter: {type: boolean, description: This will preprocess the
+            instances with the filter. This could help improve performance if there
+            are nominal attributes in the data., default: true}
+        normalizeAttributes: {type: boolean, description: This will normalize the
+            attributes. This could help improve performance of the network. This is
+            not reliant on the class being numeric. This will also normalize nominal
+            attributes as well (after they have been run through the nominal to binary
+            filter if that is in use) so that the nominal values are between -1 and
+            1, default: true}
+        normalizeNumericClass: {type: boolean, description: 'This will normalize the
+            class if it''s numeric. This could help improve performance of the network,
+            It normalizes the class to be between -1 and 1. Note that this is only
+            internally, the output will be scaled back to the original range.', default: true}
+        reset: {type: boolean, description: This will allow the network to reset with
+            a lower learning rate. If the network diverges from the answer this will
+            automatically reset the network with a lower learning rate and begin training
+            again. This option is only available if the gui is not set. Note that
+            if the network diverges but isn't allowed to reset it will fail the training
+            process and return an error message., default: true}
+        trainingTime: {type: number, format: int32, description: The number of epochs
+            to train through. If the validation set is non-zero then it can terminate
+            the network early, default: 500}
+        validationSetSize: {type: number, format: int32, description: 'The percentage
+            size of the validation set. (The training will continue until it is observed
+            that the error on the validation set has been consistently getting worse,
+            or if the training time is reached). If This is set to zero no validation
+            set will be used and instead the network will train for the specified
+            number of epochs.', default: 0}
+        validationThreshold: {type: number, format: int32, description: Used to terminate
+            validation testing. The value here dictates how many times in a row the
+            validation set error can get worse before training is terminated., default: 20}
+  SMOreg:
+    allOf:
+    - {$ref: '#/definitions/AlgoConfig'}
+    - type: object
+      description: 'SMOreg implements the support vector machine for regression. The
+        parameters can be learned using various algorithms. The algorithm is selected
+        by setting the RegOptimizer. The most popular algorithm (RegSMOImproved) is
+        due to Shevade, Keerthi et al and this is the default RegOptimizer. For more
+        information see: S.K. Shevade, S.S. Keerthi, C. Bhattacharyya, K.R.K. Murthy:
+        Improvements to the SMO Algorithm for SVM Regression. In: IEEE Transactions
+        on Neural Networks, 1999. http://guppy.mpe.nus.edu.sg/~mpessk/svm/ieee_smo_reg.ps.gz
+        And A.J. Smola, B. Schoelkopf (1998). A tutorial on support vector regression.'
+      properties:
+        c: {type: number, format: double, description: The complexity parameter C.,
+          default: 1.0}
+        filterType:
+          type: string
+          description: Determines how/if the data will be transformed.
+          enum: [NONE, NORMALIZE, STANDARDIZE]
+          default: NORMALIZE
+        kernel:
+          type: string
+          description: The kernel to use.
+          enum: [NormalizedPolyKernel, PolyKernel]
+          default: PolyKernel
+        kernelConfig: {$ref: '#/definitions/KernelConfig'}
+        regOptimizer:
+          type: string
+          description: The learning algorithm.
+          enum: [RegSMO, RegSMOImproved]
+          default: RegSMOImproved
+        regOptimizerConfig: {$ref: '#/definitions/RegOptimizerConfig'}
+  KernelConfig: {type: object, description: Use the kernel configuration corresponding
+      to the kernel you have choose}
+  NormalizedPolyKernel:
+    allOf:
+    - {$ref: '#/definitions/KernelConfig'}
+    - type: object
+      description: The normalized polynomial kernel. K(x,y) = <x,y>/sqrt(<x,x><y,y>)
+        where <x,y> = PolyKernel(x,y)
+      properties:
+        exponent: {type: number, format: double, description: The exponent value.,
+          default: 2.0}
+        useLowerOrder: {type: boolean, description: Whether to use lower-order terms.,
+          default: false}
+  PolyKernel:
+    allOf:
+    - {$ref: '#/definitions/KernelConfig'}
+    - type: object
+      description: The polynomial kernel. K(x, y) = <x, y>^p or K(x, y) = (<x, y>+1)^p
+      properties:
+        exponent: {type: number, format: double, description: The exponent value.,
+          default: 1.0}
+        useLowerOrder: {type: boolean, description: Whether to use lower-order terms.,
+          default: false}
+  RegOptimizerConfig: {type: object, description: Use the RegOptimizer configuration
+      corresponding to the RegOptimizer you have choose}
+  RegSMO:
+    allOf:
+    - {$ref: '#/definitions/RegOptimizerConfig'}
+    - type: object
+      description: Implementation of SMO for support vector regression as described
+        in A.J. Smola, B. Schoelkopf (1998). A tutorial on support vector regression.
+        NeuroCOLT2 Technical Report NC2-TR-1998-030
+      properties:
+        epsilon: {type: number, format: double, description: The epsilon for round-off
+            error (shouldn't be changed)., default: 1.0E-12}
+        epsilonParameter: {type: number, format: double, description: The epsilon
+            parameter of the epsilon insensitive loss function., default: 0.001}
+  RegSMOImproved:
+    allOf:
+    - {$ref: '#/definitions/RegOptimizerConfig'}
+    - type: object
+      description: 'Learn SVM for regression using SMO with Shevade, Keerthi, et al.
+        adaption of the stopping criterion. For more information see:  S.K. Shevade,
+        S.S. Keerthi, C. Bhattacharyya, K.R.K. Murthy: Improvements to the SMO Algorithm
+        for SVM Regression. In: IEEE Transactions on Neural Networks, 1999. http://guppy.mpe.nus.edu.sg/~mpessk/svm/ieee_smo_reg.ps.gz.
+        And S.K. Shevade, S.S. Keerthi, C. Bhattacharyya, K.R.K. Murthy (1999). Improvements
+        to the SMO Algorithm for SVM Regression. Control Division, Dept. of Mechanical
+        Engineering. http://guppy.mpe.nus.edu.sg/~mpessk/svm/smoreg_mod.ps.gz'
+      properties:
+        epsilon: {type: number, format: double, description: The epsilon for round-off
+            error (shouldn't be changed)., default: 1.0E-12}
+        epsilonParameter: {type: number, format: double, description: The epsilon
+            parameter of the epsilon insensitive loss function., default: 0.001}
+        tolerance: {type: number, format: double, description: tolerance parameter
+            used for checking stopping criterion b.up < b.low + 2 tol, default: 0.001}
+        useVariant1: {type: boolean, format: double, description: 'set true to use
+            variant 1 of the paper, otherwise use variant 2.', default: true}
+  Alert:
+    type: object
+    properties:
+      id: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Alert., example: 5fec1c6e-95d1-4eca-adcc-b58eb95e5e51}
+      project: {readOnly: true, type: string, format: UUID, description: Unique identifier
+          representing the Project, example: 1b4db2e9-5310-44f3-a7e2-fb520bb22dde}
+      name: {type: string, description: Name of the Alert, example: Alert name}
+      serie: {type: string, description: Serie of the Alert, example: Alert Serie}
+      period: {type: number, description: Time between two execution of the Alert,
+        minimum: 10, example: 86400}
+      nextRun: {type: number, description: Time of the next execution of the Alert,
+        example: 1490137200}
+      lastRun: {type: number, description: Time of the last execution of the Alert,
+        example: 1490050800}
+      type:
+        type: string
+        description: Type of the Alert
+        enum: [fixed_threshold]
+        example: fixed_threshold
+      state:
+        type: string
+        description: State of the Alert
+        enum: [OK, NO_DATA, ALERT]
+        example: OK
+      config:
+        type: object
+        description: Config of the Alert
+        properties:
+          aggregator: {$ref: '#/definitions/Aggregator'}
+          validator: {$ref: '#/definitions/Validator'}
+          period: {type: number, description: Period to use, example: 86400}
+          unit: {$ref: '#/definitions/Unit'}
+          args:
+            type: array
+            items: {type: number}
+            example: [0.598, 0.98]
+      recipients:
+        type: array
+        description: List of recipients Id
+        items: {type: string, format: UUID}
+        example: [63754856-3b30-45a1-9181-7cbddedeac34, 58bf6485-9d88-4223-b8d4-ffdb97803f69]
+      active: {type: boolean, description: Is the Alert active or not, example: true}
+  AlertCreationRequest:
+    type: object
+    required: [name, serie, type, config, recipients]
+    properties:
+      name: {type: string, description: Name of the Alert, example: Alert name}
+      serie: {type: string, description: Serie of the Alert, example: Alert Serie}
+      active: {type: boolean, description: Is the Alert active or not, default: false,
+        example: true}
+      period: {type: number, description: Time between two execution of the Alert,
+        minimum: 10, example: 86400}
+      type:
+        type: string
+        description: Type of the Alert
+        enum: [fixed_threshold]
+        example: fixed_threshold
+      config:
+        type: object
+        description: Config of the Alert
+        properties:
+          aggregator: {$ref: '#/definitions/Aggregator'}
+          validator: {$ref: '#/definitions/Validator'}
+          period: {type: number, description: Period to use, example: 1}
+          unit: {$ref: '#/definitions/Unit'}
+          args:
+            type: array
+            description: Arguments of the validator
+            items: {type: number}
+            example: [50, 500]
+      recipients:
+        type: array
+        description: Array of User id that will receive the notification
+        items: {type: string, description: User Id, format: UUID}
+        example: [c7a8af90-1f56-48b1-901c-1a17a2803c83]
+      nextRun: {type: number, format: int32, description: Time of the next execution
+          of the Alert, example: 1491381932}
+  AlertUpdateRequest:
+    type: object
+    required: [name, serie, type, config, recipients]
+    properties:
+      name: {type: string, description: Name of the Alert, example: Alert name}
+      serie: {type: string, description: Serie of the Alert, example: Alert Serie}
+      active: {type: boolean, description: Is the Alert active or not, default: false,
+        example: true}
+      period: {type: number, description: Time between two execution of the Alert,
+        minimum: 10, example: 86400}
+      type:
+        type: string
+        description: Type of the Alert
+        enum: [fixed_threshold]
+        example: fixed_threshold
+      config:
+        type: object
+        description: Config of the Alert
+        properties:
+          aggregator: {$ref: '#/definitions/Aggregator'}
+          validator: {$ref: '#/definitions/Validator'}
+          period: {type: number, description: Period to use, example: 1}
+          unit: {$ref: '#/definitions/Unit'}
+          args:
+            type: array
+            description: Arguments of the validator
+            items: {type: number}
+            example: [50, 500]
+      recipients:
+        type: array
+        description: Array of User id that will receive the notification
+        items: {type: string, description: User Id, format: UUID}
+        example: [c7a8af90-1f56-48b1-901c-1a17a2803c83]
+      nextRun: {type: number, format: int32, description: Time of the next execution
+          of the Alert, example: 1491381932}
+  EventUpdateRequest:
+    type: object
+    properties:
+      meta: {type: object, description: Meta of the Event}
+  Unit:
+    type: string
+    description: Unit to use
+    enum: [seconds, minutes, hours, days, weeks, months, years]
+    example: days
+  Validator:
+    type: string
+    description: Validator to use
+    enum: [is_above, is_below, is_outside_range, is_inside_range, has_no_value]
+    example: is_outside_range
